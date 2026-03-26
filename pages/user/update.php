@@ -1,11 +1,19 @@
 <?php
-$username = $passwd = $name = '';
-$usernameErr = $passwdErr = $nameErr = '';
+$id = $_GET['id'];
+$targetUser = readUser($id);
+if ($targetUser == null || $targetUser->level == 'admin') {
+    header("Location: ./?page=user/list");
+}
+
+$username = $targetUser->username;
+$name = $targetUser->name;
+
+$usernameErr = $nameErr = '';
 
 if (isset($_POST['name'], $_POST['username'], $_POST['passwd'], $_FILES['photo'])) {
     $name = trim($_POST['name']);
     $username = trim($_POST['username']);
-    $passwd = $_POST['passwd'];
+    $passwd = trim($_POST['passwd']);
     $photo = $_FILES['photo'];
     if (empty($name)) {
         $nameErr = 'please input name!';
@@ -13,22 +21,17 @@ if (isset($_POST['name'], $_POST['username'], $_POST['passwd'], $_FILES['photo']
     if (empty($username)) {
         $usernameErr = 'please input username!';
     }
-    if (empty($passwd)) {
-        $passwdErr = 'please input password!';
-    }
-    if (usernameExists($username)) {
+    if ($targetUser->username !== $username && usernameExists($username)) {
         $usernameErr = 'username exist!';
     }
-    if (empty($nameErr) && empty($usernameErr) && empty($passwdErr)) {
+    if (empty($nameErr) && empty($usernameErr)) {
         try {
-            if (createUser($name, $username, $passwd, $photo)) {
-                $username = $passwd = $name = '';
+            if (updateUser($id, $name, $username, $passwd, $photo)) {
+                $targetUser = readUser($id);
+                $username = $targetUser->username;
+                $name = $targetUser->name;
                 echo '<div class="alert alert-success" role="alert">
-                    Create success. <a href="./?page=user/list">List</a>
-                </div>';
-            } else {
-                echo '<div class="alert alert-danger" role="alert">
-                try aggain.
+                    Update success. <a href="./?page=user/list">List</a>
                 </div>';
             }
         } catch (\Throwable $th) {
@@ -42,12 +45,14 @@ if (isset($_POST['name'], $_POST['username'], $_POST['passwd'], $_FILES['photo']
 ?>
 
 
-<form method="post" action="./?page=user/create" enctype="multipart/form-data" class="col-md-10 col-lg-6 mx-auto">
-    <h3>Create User</h3>
+<form method="post" action="./?page=user/update&id=<?php echo $id; ?>" enctype="multipart/form-data"
+    class="col-md-10 col-lg-6 mx-auto">
+    <h3>Update User</h3>
     <div class="d-flex justify-content-center">
         <input name="photo" type="file" id="profileUpload" hidden>
         <label role="button" for="profileUpload">
-            <img src="./assets/images/emptyuser.png" class="rounded img-thumbnail" style="max-width:200px">
+            <img src="<?php echo $targetUser->photo ?? './assets/images/emptyuser.png'; ?>"
+                class="rounded img-thumbnail" style="max-width:200px">
         </label>
     </div>
     <div class="mb-3">

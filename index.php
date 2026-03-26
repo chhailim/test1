@@ -5,10 +5,16 @@ $isAdmin = isAdmin();
 include './includes/header.inc.php';
 include './includes/navbar.inc.php';
 
-$avialable_pages = ['login', 'register', 'logout', 'dashboard', 'profile', 'user/list', 'user/create'];
 $logged_in_pages = ['dashboard', 'profile'];
 $non_logged_in_pages = ['login', 'register'];
-$admin_pages = ['user/list', 'user/create'];
+$admin_pages = ['user/list', 'user/create', 'user/update', 'user/delete'];
+$avialable_pages = [ // array destructuring
+    'logout',
+    ...$non_logged_in_pages,
+    ...$logged_in_pages,
+    ...$admin_pages
+]; 
+
 $page = '';
 if (isset($_GET['page'])) {
     $page = $_GET['page']; // login
@@ -20,7 +26,7 @@ if (in_array($page, $non_logged_in_pages) && !empty($user)) {
     header('Location: ./?page=dashboard');
 }
 if (in_array($page, $avialable_pages)) {
-    if(in_array($page, $admin_pages) && !$isAdmin) {
+    if (in_array($page, $admin_pages) && !$isAdmin) {
         header('Location: ./?page=dashboard');
     }
     include './pages/' . $page . '.php';
